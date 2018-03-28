@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 # Do this before importing any other gym modules, as most of them import some
 # dependencies themselves.
+
+
 def sanity_check_dependencies():
     import numpy
     import requests
@@ -52,5 +54,5 @@ from gym.benchmarks import benchmark_spec
 from gym.envs import make, spec
 from gym.scoreboard.api import upload
 from gym import wrappers
-
-__all__ = ["Env", "Space", "Wrapper", "make", "spec", "upload", "wrappers"]
+import gym.spaces as spaces
+__all__ = ["Env", "Space", "Wrapper", "make", "spec", "upload", "wrappers", "spaces"]
