@@ -4,6 +4,7 @@ from gym.envs.mujoco import mujoco_env
 
 class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
+        print("in hopper env")
         mujoco_env.MujocoEnv.__init__(self, 'hopper.xml', 4)
         utils.EzPickle.__init__(self)
 
@@ -24,7 +25,8 @@ class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def _get_obs(self):
         return np.concatenate([
             self.sim.data.qpos.flat[1:],
-            np.clip(self.sim.data.qvel.flat, -10, 10)
+            np.array(self.sim.data.qvel.flat)
+            # np.clip(self.sim.data.qvel.flat, -10, 10)
         ])
 
     def reset_model(self):
@@ -38,3 +40,31 @@ class HopperEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         self.viewer.cam.distance = self.model.stat.extent * 0.75
         self.viewer.cam.lookat[2] += .8
         self.viewer.cam.elevation = -20
+
+    def set_ob_and_step(self, ob, act):
+        qpos = ob[:self.model.nq - 1]
+        # self.sim.data.qpos[0]]
+        qpos = np.concatenate(([0.0], qpos))
+        qvel = ob[self.model.nq - 1:]
+        self.set_state(qpos, qvel)
+        ob, reward, done, _ = self.step(act)
+        return ob, reward, done, {}
+
+    def step_with_state(self, state, a):
+        qpos, qvel = state
+        self.set_state(qpos, qvel)
+        return self.step(a)
+
+if __name__ =='__main__':
+    env = HopperEnv()
+    int_obs = env.reset()
+    for i in range(3000):
+        a = env.action_space.sample()
+        ob, reward, done, _ = env.step(a)
+        ob2, reward, done, _ = env.set_ob_and_step(int_obs, a)
+        ob3, reward, done, _ = env.set_ob_and_step(int_obs, a)
+        if not np.all(ob - ob2) < 1e-10:
+            print("error to step {}".format(ob - ob2))
+        if not np.all(ob3 - ob2) < 1e-10:
+            print("error to repeat set_ob_and_step {}".format(ob3 - ob2))
+        int_obs = ob3

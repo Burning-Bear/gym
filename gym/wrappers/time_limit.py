@@ -6,7 +6,6 @@ class TimeLimit(Wrapper):
         super(TimeLimit, self).__init__(env)
         self._max_episode_seconds = max_episode_seconds
         self._max_episode_steps = max_episode_steps
-
         self._elapsed_steps = 0
         self._episode_started_at = None
 
@@ -34,11 +33,14 @@ class TimeLimit(Wrapper):
         if self._past_limit():
             if self.metadata.get('semantics.autoreset'):
                 _ = self.reset() # automatically reset the env
-            done = True 
-
+            done = True
         return observation, reward, done, info
 
     def reset(self):
         self._episode_started_at = time.time()
         self._elapsed_steps = 0
         return self.env.reset()
+
+    def set_ob_and_step(self, ob, ac):
+        observation, reward, done, info = self.env.set_ob_and_step(ob, ac)
+        return observation, reward, done, info
